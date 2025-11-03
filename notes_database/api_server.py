@@ -20,7 +20,7 @@ Endpoints:
 - DELETE /notes/<int:id>    -> Delete a note by id
 """
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Blueprint
 from flask_cors import CORS
 import sqlite3
 import os
@@ -30,7 +30,11 @@ DB_NAME = "myapp.db"
 
 app = Flask(__name__)
 # Enable CORS for all domains and routes (development-friendly)
-CORS(app)
+# Keep CORS enabled for all /api/* endpoints
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Create API blueprint to mount all routes under /api
+api = Blueprint("api", __name__)
 
 
 def get_db_connection() -> sqlite3.Connection:
@@ -92,7 +96,7 @@ def validate_payload(payload: Optional[Dict[str, Any]], require_both: bool = Tru
 
 
 # PUBLIC_INTERFACE
-@app.get("/notes")
+@api.get("/notes")
 def list_notes():
     """
     List all notes ordered by created_at DESC.
@@ -117,7 +121,7 @@ def list_notes():
 
 
 # PUBLIC_INTERFACE
-@app.get("/notes/<int:note_id>")
+@api.get("/notes/<int:note_id>")
 def get_note(note_id: int):
     """
     Get a single note by id.
@@ -145,7 +149,7 @@ def get_note(note_id: int):
 
 
 # PUBLIC_INTERFACE
-@app.post("/notes")
+@api.post("/notes")
 def create_note():
     """
     Create a new note.
@@ -186,7 +190,7 @@ def create_note():
 
 
 # PUBLIC_INTERFACE
-@app.put("/notes/<int:note_id>")
+@api.put("/notes/<int:note_id>")
 def update_note(note_id: int):
     """
     Update an existing note. Both title and content must be provided.
@@ -240,7 +244,7 @@ def update_note(note_id: int):
 
 
 # PUBLIC_INTERFACE
-@app.delete("/notes/<int:note_id>")
+@api.delete("/notes/<int:note_id>")
 def delete_note(note_id: int):
     """
     Delete a note by id.
@@ -276,6 +280,9 @@ def main():
         ensure_notes_table()
     else:
         ensure_notes_table()
+
+    # Register API blueprint under /api
+    app.register_blueprint(api, url_prefix="/api")
 
     # Bind to 0.0.0.0:5001
     app.run(host="0.0.0.0", port=5001, debug=False)
