@@ -50,6 +50,17 @@ cursor.execute("""
     )
 """)
 
+# Create notes table required by the API
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
+
 # Insert initial data
 cursor.execute("INSERT OR REPLACE INTO app_info (key, value) VALUES (?, ?)", 
                ("project_name", "notes_database"))
