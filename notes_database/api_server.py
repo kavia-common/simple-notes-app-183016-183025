@@ -36,6 +36,17 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Create API blueprint to mount all routes under /api
 api = Blueprint("api", __name__)
 
+# PUBLIC_INTERFACE
+@api.get("/health")
+def health():
+    """
+    Lightweight health check endpoint for availability monitoring.
+
+    Returns:
+        200 OK with JSON {"status": "ok"} to indicate the API is reachable and responsive.
+    """
+    return jsonify({"status": "ok"}), 200
+
 
 def get_db_connection() -> sqlite3.Connection:
     """
@@ -273,6 +284,13 @@ def delete_note(note_id: int):
 def main():
     """
     Entry point to run the Flask app.
+
+    Notes:
+        - The server binds to 0.0.0.0:5001 so it is reachable by the reverse proxy.
+        - All routes are mounted under /api (e.g., /api/notes, /api/health).
+        - CORS is enabled for /api/* endpoints to facilitate frontend development.
+        - If the process is not auto-started in your environment, run:
+              python3 api_server.py
     """
     # Ensure DB file exists (it will be created automatically by sqlite when connecting)
     if not os.path.exists(DB_NAME):
@@ -284,7 +302,7 @@ def main():
     # Register API blueprint under /api
     app.register_blueprint(api, url_prefix="/api")
 
-    # Bind to 0.0.0.0:5001
+    # Bind to 0.0.0.0:5001 (required for external access)
     app.run(host="0.0.0.0", port=5001, debug=False)
 
 
